@@ -1,3 +1,4 @@
+>>>>>>> origin/main
 # 🌾 Kisan Sunaai – AI-Powered Farmer Complaint Assistant
 
 Kisan Sunaai is a voice-first AI-powered platform designed to help farmers in India submit and understand their agricultural complaints in a simple and accessible way.
@@ -75,3 +76,7 @@ Install dependencies:
 
 ```bash
 pip install fastapi uvicorn python-multipart python-dotenv
+=======
+# Kisan-Sunaai
+AI-powered Hindi voice assistant for farmer grievance analysis and complaint tracking.
+>>>>>>> 781998406b68e382cf36f4a35e8e978cc9e90fa6
