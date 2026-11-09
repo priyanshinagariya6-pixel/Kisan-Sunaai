@@ -1,0 +1,508 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisan Sunaai | किसान सुनाई</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f7f1;
+            color: #203328;
+        }
+
+        header {
+            background: #174d32;
+            color: white;
+            padding: 22px 8%;
+        }
+
+        header h1 { margin: 0; }
+        header p { margin-bottom: 0; }
+
+        main {
+            max-width: 950px;
+            margin: 35px auto;
+            padding: 0 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            margin-bottom: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000010;
+        }
+
+        h2 { color: #174d32; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+        }
+
+        button {
+            background: #237849;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+        }
+
+        button:hover { background: #174d32; }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 14px;
+            background: #eef7ef;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .complaint {
+            border-bottom: 1px solid #ddd;
+            padding: 12px 0;
+        }
+
+        .recording-status {
+            font-weight: bold;
+            margin: 12px 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64746a;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🌾 Kisan Sunaai | किसान सुनाई</h1>
+    <p>AI-powered Farmer Complaint Assistance System</p>
+</header>
+
+<main>
+
+    <section class="card">
+        <h2>Welcome, Farmer! नमस्ते किसान भाई</h2>
+        <p>अपनी शिकायत बोलकर दर्ज करें या पहले से सेव शिकायतों को ट्रैक करें।</p>
+    </section>
+
+    <!-- LIVE VOICE COMPLAINT -->
+    <section class="card">
+        <h2>🎤 Voice Complaint | अपनी शिकायत बोलें</h2>
+
+        <p>
+            Microphone button दबाएं और अपनी समस्या हिंदी में बताएं।
+            बोलने के बाद Stop Recording दबाएं।
+        </p>
+
+        <button id="startBtn" onclick="startRecording()">
+            🎤 Start Recording
+        </button>
+
+        <button id="stopBtn" onclick="stopRecording()" disabled>
+            Stop Recording
+        </button>
+
+        <p id="recordingStatus" class="recording-status">
+            Microphone is ready.
+        </p>
+
+        <audio id="audioPreview" controls hidden></audio>
+
+        <div>
+            <button id="submitBtn" onclick="submitVoiceComplaint()" disabled>
+                Submit Voice Complaint
+            </button>
+        </div>
+
+        <div id="voiceResult" class="result">
+            Your voice complaint result will appear here.
+        </div>
+    </section>
+
+    <!-- TRACK COMPLAINT -->
+    <section class="card">
+        <h2>Track Your Complaint</h2>
+
+        <input
+            type="text"
+            id="complaintId"
+            placeholder="Enter your Complaint ID"
+        >
+
+        <button onclick="trackComplaint()">
+            Track Complaint
+        </button>
+
+        <div id="trackResult" class="result">
+            Enter your complaint ID to check its status.
+        </div>
+    </section>
+
+    <!-- SAVED COMPLAINTS -->
+    <section class="card">
+        <h2>Saved Farmer Complaints</h2>
+
+        <button onclick="loadComplaints()">
+            Refresh Complaints
+        </button>
+
+        <div id="complaintList">
+            Loading complaints...
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    Kisan Sunaai | Built for Indian Farmers 🇮🇳
+</footer>
+
+<script>
+    const API_URL = "http://127.0.0.1:8000";
+
+    let audioContext;
+    let microphoneStream;
+    let sourceNode;
+    let processorNode;
+    let audioChunks = [];
+    let recordedBlob = null;
+    let isRecording = false;
+
+    // START MICROPHONE
+    async function startRecording() {
+        try {
+            if (!navigator.mediaDevices?.getUserMedia) {
+                throw new Error(
+                    "Microphone is unavailable. Open this page on localhost or HTTPS."
+                );
+            }
+
+            microphoneStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    channelCount: 1,
+                    echoCancellation: true,
+                    noiseSuppression: true
+                }
+            });
+
+            audioContext = new AudioContext();
+            sourceNode = audioContext.createMediaStreamSource(microphoneStream);
+
+            processorNode = audioContext.createScriptProcessor(
+                4096, 1, 1
+            );
+
+            audioChunks = [];
+            recordedBlob = null;
+
+            processorNode.onaudioprocess = function(event) {
+                if (!isRecording) return;
+
+                const input = event.inputBuffer.getChannelData(0);
+                audioChunks.push(new Float32Array(input));
+            };
+
+            sourceNode.connect(processorNode);
+            processorNode.connect(audioContext.destination);
+
+            isRecording = true;
+
+            document.getElementById("startBtn").disabled = true;
+            document.getElementById("stopBtn").disabled = false;
+            document.getElementById("submitBtn").disabled = true;
+
+            document.getElementById("recordingStatus").textContent =
+                "🔴 Recording... Speak in Hindi.";
+
+            document.getElementById("voiceResult").textContent =
+                "Recording your complaint...";
+
+        } catch (error) {
+            document.getElementById("recordingStatus").textContent =
+                "Microphone error: " + error.message;
+        }
+    }
+    window.startRecording = startRecording;
+
+    // STOP MICROPHONE
+    async function stopRecording() {
+        if (!isRecording) return;
+
+        isRecording = false;
+
+        processorNode.disconnect();
+        sourceNode.disconnect();
+
+        microphoneStream.getTracks().forEach(track => track.stop());
+
+        const sampleRate = audioContext.sampleRate;
+
+        await audioContext.close();
+
+        const wavBuffer = convertToWav(audioChunks, sampleRate);
+
+        recordedBlob = new Blob([wavBuffer], {
+            type: "audio/wav"
+        });
+
+        const previewUrl = URL.createObjectURL(recordedBlob);
+
+        const preview = document.getElementById("audioPreview");
+        preview.src = previewUrl;
+        preview.hidden = false;
+
+        document.getElementById("startBtn").disabled = false;
+        document.getElementById("stopBtn").disabled = true;
+        document.getElementById("submitBtn").disabled = false;
+
+        document.getElementById("recordingStatus").textContent =
+            "Recording completed. Listen to your audio before submitting.";
+
+        audioChunks = [];
+    }
+
+    // CONVERT BROWSER AUDIO TO 16 kHz MONO WAV
+    function convertToWav(chunks, originalRate) {
+        const totalLength = chunks.reduce(
+            (sum, chunk) => sum + chunk.length, 0
+        );
+
+        const combined = new Float32Array(totalLength);
+        let offset = 0;
+
+        for (const chunk of chunks) {
+            combined.set(chunk, offset);
+            offset += chunk.length;
+        }
+
+        const targetRate = 16000;
+        const ratio = originalRate / targetRate;
+        const outputLength = Math.floor(combined.length / ratio);
+
+        const samples = new Float32Array(outputLength);
+
+        for (let i = 0; i < outputLength; i++) {
+            const position = i * ratio;
+            const index = Math.floor(position);
+            const fraction = position - index;
+
+            const first = combined[index] || 0;
+            const second = combined[index + 1] || first;
+
+            samples[i] = first + (second - first) * fraction;
+        }
+
+        const buffer = new ArrayBuffer(44 + samples.length * 2);
+        const view = new DataView(buffer);
+
+        function writeString(position, value) {
+            for (let i = 0; i < value.length; i++) {
+                view.setUint8(position + i, value.charCodeAt(i));
+            }
+        }
+
+        writeString(0, "RIFF");
+        view.setUint32(4, 36 + samples.length * 2, true);
+        writeString(8, "WAVE");
+        writeString(12, "fmt ");
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, targetRate, true);
+        view.setUint32(28, targetRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeString(36, "data");
+        view.setUint32(40, samples.length * 2, true);
+
+        for (let i = 0; i < samples.length; i++) {
+            const sample = Math.max(-1, Math.min(1, samples[i]));
+            const pcm = sample < 0
+                ? sample * 32768
+                : sample * 32767;
+
+            view.setInt16(44 + i * 2, pcm, true);
+        }
+
+        return buffer;
+    }
+
+    // SUBMIT VOICE COMPLAINT TO FASTAPI
+    async function submitVoiceComplaint() {
+        if (!recordedBlob) {
+            alert("Please record your complaint first.");
+            return;
+        }
+
+        const result = document.getElementById("voiceResult");
+        const submitBtn = document.getElementById("submitBtn");
+
+        const formData = new FormData();
+
+        formData.append(
+            "file",
+            recordedBlob,
+            "farmer_complaint.wav"
+        );
+
+        submitBtn.disabled = true;
+        result.textContent =
+            "Processing your complaint. Please wait...";
+
+        try {
+            const response = await fetch(
+                `${API_URL}/voice-complaint`,
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Processing failed.");
+            }
+
+            const complaint = data.complaint;
+
+            result.innerHTML = `
+                <h3>✅ Complaint Processed Successfully!</h3>
+                <p><b>Complaint ID:</b> ${escapeHTML(complaint.complaint_id)}</p>
+                <p><b>Complaint:</b> ${escapeHTML(complaint.complaint)}</p>
+                <p><b>Category:</b> ${escapeHTML(complaint.category)}</p>
+                <p><b>Confidence:</b> ${escapeHTML(complaint.confidence)}</p>
+                <p><b>Status:</b> ${escapeHTML(complaint.status)}</p>
+                <p><b>AI Analysis:</b></p>
+                <pre style="white-space:pre-wrap;font-family:Arial;">${escapeHTML(complaint.analysis)}</pre>
+            `;
+
+            document.getElementById("complaintId").value =
+                complaint.complaint_id;
+
+            loadComplaints();
+
+            document.getElementById("recordingStatus").textContent =
+                "Complaint submitted successfully!";
+
+        } catch (error) {
+            result.textContent =
+                "Error: " + error.message;
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+
+    // TRACK COMPLAINT
+    async function trackComplaint() {
+        const id = document
+            .getElementById("complaintId")
+            .value.trim();
+
+        const result = document.getElementById("trackResult");
+
+        if (!id) {
+            result.textContent = "Please enter a Complaint ID.";
+            return;
+        }
+
+        result.textContent = "Searching...";
+
+        try {
+            const response = await fetch(
+                `${API_URL}/track/${encodeURIComponent(id)}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                result.textContent =
+                    data.detail || "Complaint not found.";
+                return;
+            }
+
+            result.innerHTML = `
+                <h3>Complaint Found ✓</h3>
+                <p><b>ID:</b> ${escapeHTML(data.complaint_id)}</p>
+                <p><b>Complaint:</b> ${escapeHTML(data.complaint)}</p>
+                <p><b>Category:</b> ${escapeHTML(data.category)}</p>
+                <p><b>Status:</b> ${escapeHTML(data.status)}</p>
+            `;
+
+        } catch (error) {
+            result.textContent =
+                "Cannot connect to backend. Check whether FastAPI is running.";
+        }
+    }
+
+    // LOAD SAVED COMPLAINTS
+    async function loadComplaints() {
+        const list = document.getElementById("complaintList");
+
+        list.textContent = "Loading...";
+
+        try {
+            const response = await fetch(`${API_URL}/complaints`);
+
+            if (!response.ok) {
+                throw new Error("Unable to load complaints");
+            }
+
+            const complaints = await response.json();
+
+            if (complaints.length === 0) {
+                list.textContent = "No complaints saved yet.";
+                return;
+            }
+
+            list.innerHTML = complaints.map(item => `
+                <div class="complaint">
+                    <p><b>ID:</b> ${escapeHTML(item.complaint_id)}</p>
+                    <p><b>Category:</b> ${escapeHTML(item.category)}</p>
+                    <p><b>Status:</b> ${escapeHTML(item.status)}</p>
+                </div>
+            `).join("");
+
+                } catch (error) {
+            list.textContent =
+                "Cannot connect to backend. Check whether FastAPI is running.";
+        }
+    }
+
+    // HTML SAFE DISPLAY
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[char]);
+    }
+
+    // Load complaints when dashboard opens
+    loadComplaints();
+
+</script>
+</body>
+</html>
