@@ -17,3 +17,5 @@ backend/uploads/
 # Temporary files
 *.log
 backend/complaint_record.json
+# Deployment virtual environment
+backend/deploy_env/
