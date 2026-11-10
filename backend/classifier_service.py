@@ -1,12 +1,3 @@
-from transformers import pipeline
-
-print("Loading Kisan Sunaai AI classifier...")
-
-classifier = pipeline(
-    "zero-shot-classification",
-    model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli",
-    device=-1
-)
 
 CATEGORIES = [
     "PM Kisan payment issue",
@@ -18,14 +9,46 @@ CATEGORIES = [
     "Other farmer problem"
 ]
 
+KEYWORDS = {
+    "PM Kisan payment issue": [
+        "pm kisan", "installment", "kisth", "payment",
+        "पैसा", "किस्त", "सम्मान निधि"
+    ],
+    "Fertilizer shortage": [
+       "fertilizer", "urea", "khad", "khaad", "डीएपी",
+        "खाद", "यूरिया"
+    ],
+    "Crop damage": [
+        "crop damage", "fasal kharab", "baarish",
+        "ओलावृष्टि", "फसल खराब", "नुकसान"
+    ],
+    "Government scheme issue": [
+        "scheme", "yojana", "registration",
+        "योजना", "रजिस्ट्रेशन"
+    ],
+    "Crop disease or pest problem": [
+        "disease", "pest", "insect", "कीट",
+        "रोग", "बीमारी", "फफूंद"
+    ],
+    "Irrigation or water problem": [
+        "irrigation", "water", "paani", "sinchai",
+        "पानी", "सिंचाई"
+    ]
+}
+
 
 def classify_complaint(complaint):
-    prediction = classifier(complaint, CATEGORIES)
+    text = complaint.lower()
+
+    for category, keywords in KEYWORDS.items():
+        for keyword in keywords:
+            if keyword in text:
+                return {
+                    "category": category,
+                    "confidence": 0.85
+                }
 
     return {
-        "category": prediction["labels"][0],
-        "confidence": round(float(prediction["scores"][0]), 2)
+        "category": "Other farmer problem",
+        "confidence": 0.50
     }
-
-
-print("Kisan Sunaai AI classifier loaded successfully!")
