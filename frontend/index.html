@@ -1,181 +1,568 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b3b2a">
     <title>Kisan Sunaai | किसान सुनाई</title>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; }
+        :root {
+            --green-950: #082d21;
+            --green-900: #0b3b2a;
+            --green-800: #10543a;
+            --green-700: #16734b;
+            --green-600: #21865b;
+            --green-100: #e7f4ec;
+            --green-50: #f2f8f4;
+            --ink: #17251e;
+            --muted: #718078;
+            --line: #e6ede8;
+            --surface: #ffffff;
+            --canvas: #f5f8f6;
+            --amber: #f4b740;
+            --shadow: 0 12px 35px rgba(18, 54, 36, .06);
+        }
 
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f3f7f1;
-            color: #203328;
+            color: var(--ink);
+            background: var(--canvas);
+            font-family: "DM Sans", "Segoe UI", Arial, sans-serif;
+            line-height: 1.6;
+        }
+        button, input { font: inherit; }
+        button { cursor: pointer; }
+
+        .app-shell { min-height: 100vh; }
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 248px;
+            padding: 27px 18px;
+            background: var(--green-950);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            z-index: 5;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 9px 30px;
+            border-bottom: 1px solid rgba(255,255,255,.12);
+        }
+        .brand-mark {
+            width: 43px;
+            height: 43px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: rgba(255,255,255,.12);
+            font-size: 23px;
+        }
+        .brand-name {
+            font-family: Manrope, sans-serif;
+            font-size: 17px;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+        .brand-sub { color: #a9c8b8; font-size: 11px; letter-spacing: .4px; }
+        .nav-label {
+            margin: 28px 10px 10px;
+            color: #8eae9d;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 13px;
+            margin: 3px 0;
+            border-radius: 10px;
+            color: #c5d9ce;
+            font-size: 13px;
+            text-decoration: none;
+            transition: .2s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #fff;
+            background: rgba(255,255,255,.12);
+        }
+        .nav-icon { width: 20px; text-align: center; font-size: 16px; }
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 16px 13px;
+            border: 1px solid rgba(255,255,255,.13);
+            border-radius: 13px;
+            color: #c5d9ce;
+            font-size: 11px;
+        }
+        .online-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            margin-right: 6px;
+            border-radius: 50%;
+            background: #65d69b;
         }
 
-        header {
-            background: #174d32;
-            color: white;
-            padding: 22px 8%;
+        .main-area { margin-left: 248px; min-height: 100vh; }
+        .topbar {
+            height: 76px;
+            padding: 0 42px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,.9);
+            border-bottom: 1px solid var(--line);
+        }
+        .breadcrumb { color: var(--muted); font-size: 12px; }
+        .breadcrumb strong { color: var(--ink); font-weight: 700; }
+        .topbar-right { display: flex; align-items: center; gap: 13px; }
+        .language-pill {
+            padding: 7px 12px;
+            border: 1px solid var(--line);
+            border-radius: 30px;
+            color: #53645a;
+            font-size: 11px;
+            background: #fff;
+        }
+        .avatar {
+            width: 35px;
+            height: 35px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            color: var(--green-800);
+            background: var(--green-100);
+            font-size: 15px;
+            font-weight: 700;
         }
 
-        header h1 { margin: 0; }
-        header p { margin-bottom: 0; }
-
-        main {
-            max-width: 950px;
-            margin: 35px auto;
-            padding: 0 18px;
+        main { width: min(1180px, 100%); margin: 0 auto; padding: 34px 42px 50px; }
+        .page-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 25px;
         }
+        .eyebrow {
+            color: var(--green-700);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        h1, h2, h3, p { margin-top: 0; }
+        .page-heading h1 {
+            margin: 5px 0 4px;
+            font-family: Manrope, sans-serif;
+            font-size: clamp(24px, 3vw, 31px);
+            line-height: 1.25;
+            letter-spacing: -.8px;
+        }
+        .page-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+        .date-note { color: var(--muted); font-size: 11px; white-space: nowrap; }
 
-        .card {
-            background: white;
-            padding: 24px;
+        .welcome-banner {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+            min-height: 170px;
             margin-bottom: 22px;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px #00000010;
-        }
-
-        h2 { color: #174d32; }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 7px;
-        }
-
-        button {
-            background: #237849;
+            padding: 28px 32px;
             color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 7px;
-            cursor: pointer;
-            margin: 5px 5px 5px 0;
+            border-radius: 18px;
+            background: linear-gradient(115deg, #0b3b2a 0%, #126b45 70%, #21865b 100%);
+            box-shadow: 0 15px 35px rgba(11,59,42,.13);
+        }
+        .welcome-banner:after {
+            content: "🌾";
+            position: absolute;
+            right: 7%;
+            top: -34px;
+            opacity: .12;
+            font-size: 175px;
+            transform: rotate(-14deg);
+        }
+        .welcome-copy { position: relative; z-index: 1; max-width: 650px; }
+        .welcome-copy .tag {
+            display: inline-block;
+            padding: 5px 10px;
+            margin-bottom: 9px;
+            color: #d9f5e5;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 30px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .5px;
+        }
+        .welcome-copy h2 {
+            margin: 0 0 7px;
+            color: white;
+            font-family: Manrope, sans-serif;
+            font-size: 22px;
+        }
+        .welcome-copy p { margin: 0; color: #d7e9df; font-size: 12px; }
+        .welcome-symbol {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            place-items: center;
+            width: 92px;
+            height: 92px;
+            flex: 0 0 92px;
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 25px;
+            background: rgba(255,255,255,.1);
+            font-size: 43px;
         }
 
-        button:hover { background: #174d32; }
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 22px;
         }
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 17px 19px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 42px;
+            border-radius: 12px;
+            background: var(--green-50);
+            font-size: 19px;
+        }
+        .stat-label { color: var(--muted); font-size: 10px; }
+        .stat-value { color: var(--ink); font-family: Manrope, sans-serif; font-size: 16px; font-weight: 800; }
 
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(290px, .75fr);
+            gap: 20px;
+            align-items: start;
+        }
+        .left-column, .right-column { min-width: 0; }
+        .card {
+            padding: 23px;
+            margin-bottom: 20px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+        .card-heading {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .card-icon {
+            width: 39px;
+            height: 39px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 39px;
+            border-radius: 11px;
+            background: var(--green-100);
+            font-size: 18px;
+        }
+        .card-heading h2 {
+            margin: 0 0 3px;
+            color: var(--ink);
+            font-family: Manrope, sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+        }
+        .card-heading p { margin: 0; color: var(--muted); font-size: 11px; }
+        .helper-text { margin: 0 0 18px; color: #66766d; font-size: 12px; }
+        .recording-panel {
+            padding: 18px;
+            border: 1px dashed #c8ded0;
+            border-radius: 13px;
+            background: #f8fbf9;
+            text-align: center;
+        }
+        .mic-orb {
+            width: 62px;
+            height: 62px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            color: white;
+            background: linear-gradient(145deg, #16734b, #0b3b2a);
+            box-shadow: 0 7px 18px rgba(22,115,75,.2);
+            font-size: 25px;
+        }
+        .recording-status { min-height: 22px; margin: 7px 0 12px; color: var(--green-700); font-size: 11px; font-weight: 700; }
+        .button-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+        button {
+            min-height: 39px;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 9px;
+            color: white;
+            background: var(--green-700);
+            font-size: 11px;
+            font-weight: 700;
+            transition: .2s ease;
+        }
+        button:hover { background: var(--green-900); transform: translateY(-1px); }
+        button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+        button.secondary {
+            color: var(--green-800);
+            background: #eaf4ed;
+            border: 1px solid #d7e9dd;
+        }
+        button.secondary:hover { background: #dceee2; }
+        button.dark { background: var(--green-950); }
+        audio { width: 100%; margin: 15px 0 3px; }
         .result {
             margin-top: 15px;
-            padding: 14px;
-            background: #eef7ef;
-            border-radius: 8px;
+            padding: 14px 15px;
+            color: #40574a;
+            background: #f5faf6;
+            border: 1px solid #e1eee5;
+            border-radius: 11px;
             overflow-wrap: anywhere;
+            font-size: 12px;
         }
-
-        .complaint {
-            border-bottom: 1px solid #ddd;
-            padding: 12px 0;
+        .result h3 { margin: 0 0 9px; color: var(--green-800); font-family: Manrope, sans-serif; font-size: 14px; }
+        .result p { margin: 6px 0; }
+        .result pre { font-size: 11px; }
+        input {
+            width: 100%;
+            min-height: 43px;
+            padding: 11px 13px;
+            margin: 5px 0 12px;
+            color: var(--ink);
+            background: #fbfdfb;
+            border: 1px solid #dce7df;
+            border-radius: 9px;
+            outline: none;
+            font-size: 12px;
         }
-
-        .recording-status {
-            font-weight: bold;
-            margin: 12px 0;
+        input:focus { border-color: var(--green-600); box-shadow: 0 0 0 3px rgba(33,134,91,.1); }
+        .field-label { display: block; color: #53645a; font-size: 11px; font-weight: 700; }
+        .full-button { width: 100%; }
+        .complaint { padding: 13px 2px; border-bottom: 1px solid var(--line); font-size: 11px; }
+        .complaint:last-child { border-bottom: 0; }
+        .complaint p { margin: 4px 0; }
+        .list-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .list-header h2 { margin: 0; color: var(--ink); font-family: Manrope, sans-serif; font-size: 15px; }
+        .list-header button { min-height: 32px; padding: 7px 11px; }
+        .info-note {
+            padding: 14px;
+            margin-top: 2px;
+            color: #66766d;
+            background: #fffaf0;
+            border: 1px solid #f3e8cc;
+            border-radius: 11px;
+            font-size: 10px;
         }
+        .info-note strong { color: #8a6420; }
+        footer { padding: 23px 20px; color: #8a9890; text-align: center; font-size: 10px; }
 
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #64746a;
+        @media (max-width: 1000px) {
+            .sidebar { width: 215px; }
+            .main-area { margin-left: 215px; }
+            main { padding: 28px 25px 40px; }
+            .topbar { padding: 0 25px; }
+            .content-grid { grid-template-columns: 1fr; }
+            .right-column { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            .right-column .card { margin-bottom: 0; }
+            .info-note { grid-column: 1 / -1; }
+        }
+        @media (max-width: 700px) {
+            .sidebar { position: static; width: 100%; padding: 13px 16px; }
+            .brand { padding: 0; border: 0; }
+            .sidebar .nav-label, .sidebar nav, .sidebar-bottom { display: none; }
+            .main-area { margin-left: 0; }
+            .topbar { height: 55px; padding: 0 18px; }
+            main { padding: 22px 15px 30px; }
+            .page-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
+            .welcome-banner { min-height: 150px; padding: 22px; }
+            .welcome-symbol { width: 65px; height: 65px; flex-basis: 65px; border-radius: 18px; font-size: 31px; }
+            .welcome-copy h2 { font-size: 18px; }
+            .stats-grid { grid-template-columns: 1fr; gap: 9px; }
+            .stat-card { padding: 12px 15px; }
+            .right-column { display: block; }
+            .right-column .card { margin-bottom: 16px; }
+            .card { padding: 18px; }
+            .date-note { white-space: normal; }
         }
     </style>
 </head>
-
 <body>
-
-<header>
-    <h1>🌾 Kisan Sunaai | किसान सुनाई</h1>
-    <p>AI-powered Farmer Complaint Assistance System</p>
-</header>
-
-<main>
-
-    <section class="card">
-        <h2>Welcome, Farmer! नमस्ते किसान भाई</h2>
-        <p>अपनी शिकायत बोलकर दर्ज करें या पहले से सेव शिकायतों को ट्रैक करें।</p>
-    </section>
-
-    <!-- LIVE VOICE COMPLAINT -->
-    <section class="card">
-        <h2>🎤 Voice Complaint | अपनी शिकायत बोलें</h2>
-
-        <p>
-            Microphone button दबाएं और अपनी समस्या हिंदी में बताएं।
-            बोलने के बाद Stop Recording दबाएं।
-        </p>
-
-        <button id="startBtn" onclick="startRecording()">
-            🎤 Start Recording
-        </button>
-
-        <button id="stopBtn" onclick="stopRecording()" disabled>
-            Stop Recording
-        </button>
-
-        <p id="recordingStatus" class="recording-status">
-            Microphone is ready.
-        </p>
-
-        <audio id="audioPreview" controls hidden></audio>
-
-        <div>
-            <button id="submitBtn" onclick="submitVoiceComplaint()" disabled>
-                Submit Voice Complaint
-            </button>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">🌾</div>
+            <div>
+                <div class="brand-name">Kisan Sunaai</div>
+                <div class="brand-sub">किसान सुनाई · AI ASSISTANT</div>
+            </div>
         </div>
 
-        <div id="voiceResult" class="result">
-            Your voice complaint result will appear here.
+        <div class="nav-label">Workspace</div>
+        <nav>
+            <a class="nav-link active" href="#dashboard"><span class="nav-icon">▦</span> Dashboard</a>
+            <a class="nav-link" href="#voice"><span class="nav-icon">🎙</span> Voice complaint</a>
+            <a class="nav-link" href="#track"><span class="nav-icon">⌕</span> Track complaint</a>
+            <a class="nav-link" href="#saved"><span class="nav-icon">▤</span> Saved complaints</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div><span class="online-dot"></span> Local service interface</div>
+            <div style="margin-top:7px;color:#8eae9d;">Designed to make support easier for every farmer.</div>
         </div>
-    </section>
+    </aside>
 
-    <!-- TRACK COMPLAINT -->
-    <section class="card">
-        <h2>Track Your Complaint</h2>
-
-        <input
-            type="text"
-            id="complaintId"
-            placeholder="Enter your Complaint ID"
-        >
-
-        <button onclick="trackComplaint()">
-            Track Complaint
-        </button>
-
-        <div id="trackResult" class="result">
-            Enter your complaint ID to check its status.
+    <div class="main-area" id="dashboard">
+        <div class="topbar">
+            <div class="breadcrumb">Workspace <span style="padding:0 7px;color:#b3beb7;">/</span> <strong>Dashboard</strong></div>
+            <div class="topbar-right">
+                <span class="language-pill">🌐 Hindi · English</span>
+                <div class="avatar">K</div>
+            </div>
         </div>
-    </section>
 
-    <!-- SAVED COMPLAINTS -->
-    <section class="card">
-        <h2>Saved Farmer Complaints</h2>
+        <main>
+            <div class="page-heading">
+                <div>
+                    <div class="eyebrow">Farmer support workspace</div>
+                    <h1>Dashboard overview</h1>
+                    <p>Speak your concern. Let AI help organise your complaint.</p>
+                </div>
+                <div class="date-note">🌱 सरल सहायता · आसान शिकायत प्रक्रिया</div>
+            </div>
 
-        <button onclick="loadComplaints()">
-            Refresh Complaints
-        </button>
+            <section class="welcome-banner">
+                <div class="welcome-copy">
+                    <span class="tag">WELCOME TO KISAN SUNAAI</span>
+                    <h2>नमस्ते किसान भाई एवं बहनों! 👋</h2>
+                    <p>अपनी समस्या हिंदी में बोलकर बताएं। आपकी शिकायत को समझने, व्यवस्थित करने और बाद में ट्रैक करने में Kisan Sunaai आपकी मदद करेगा।</p>
+                </div>
+                <div class="welcome-symbol">🌾</div>
+            </section>
 
-        <div id="complaintList">
-            Loading complaints...
-        </div>
-    </section>
+            <section class="stats-grid" aria-label="Service highlights">
+                <div class="stat-card">
+                    <div class="stat-icon">🎤</div>
+                    <div><div class="stat-label">VOICE FIRST</div><div class="stat-value">Speak in Hindi</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🤖</div>
+                    <div><div class="stat-label">AI ASSISTANCE</div><div class="stat-value">Complaint analysis</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔎</div>
+                    <div><div class="stat-label">EASY ACCESS</div><div class="stat-value">Track by ID</div></div>
+                </div>
+            </section>
 
-</main>
+            <div class="content-grid">
+                <div class="left-column">
+                    <section class="card" id="voice">
+                        <div class="card-heading">
+                            <div class="card-icon">🎙️</div>
+                            <div>
+                                <h2>Voice complaint</h2>
+                                <p>अपनी समस्या अपनी भाषा में बताएं</p>
+                            </div>
+                        </div>
+                        <p class="helper-text">Microphone button दबाएं और अपनी समस्या हिंदी में बताएं। बोलने के बाद Stop Recording दबाएं और फिर अपनी आवाज़ सुनकर submit करें।</p>
 
-<footer>
-    Kisan Sunaai | Built for Indian Farmers 🇮🇳
-</footer>
+                        <div class="recording-panel">
+                            <div class="mic-orb">🎙</div>
+                            <strong style="font-size:13px;">Tell us what happened</strong>
+                            <p style="margin:4px 0 0;color:#7a8980;font-size:10px;">For example: खाद की कमी, फसल खराब होना या PM-Kisan भुगतान की समस्या।</p>
+                            <p id="recordingStatus" class="recording-status">Microphone is ready.</p>
+                            <div class="button-row">
+                                <button id="startBtn" onclick="startRecording()">🎤 Start Recording</button>
+                                <button id="stopBtn" class="secondary" onclick="stopRecording()" disabled>Stop Recording</button>
+                            </div>
+                            <audio id="audioPreview" controls hidden></audio>
+                            <div style="margin-top:12px;">
+                                <button id="submitBtn" class="dark full-button" onclick="submitVoiceComplaint()" disabled>Submit voice complaint →</button>
+                            </div>
+                        </div>
+
+                        <div id="voiceResult" class="result">Your voice complaint result will appear here.</div>
+                    </section>
+
+                    <section class="card" id="saved">
+                        <div class="list-header">
+                            <h2>Saved farmer complaints</h2>
+                            <button class="secondary" onclick="loadComplaints()">↻ Refresh</button>
+                        </div>
+                        <p class="helper-text">Complaints saved in this app will appear here.</p>
+                        <div id="complaintList">Loading complaints...</div>
+                    </section>
+                </div>
+
+                <div class="right-column">
+                    <section class="card" id="track">
+                        <div class="card-heading">
+                            <div class="card-icon">🔎</div>
+                            <div>
+                                <h2>Track your complaint</h2>
+                                <p>अपनी शिकायत की जानकारी देखें</p>
+                            </div>
+                        </div>
+                        <label class="field-label" for="complaintId">Complaint ID</label>
+                        <input type="text" id="complaintId" placeholder="Enter your Complaint ID">
+                        <button class="full-button" onclick="trackComplaint()">Track complaint →</button>
+                        <div id="trackResult" class="result">Enter your complaint ID to check its status.</div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card-heading">
+                            <div class="card-icon">🛡️</div>
+                            <div>
+                                <h2>Your information</h2>
+                                <p>Clear and transparent assistance</p>
+                            </div>
+                        </div>
+                        <p class="helper-text" style="margin-bottom:0;">Your voice is converted into text and analysed to organise the complaint. Keep your Complaint ID safe so you can find the saved record later.</p>
+                    </section>
+
+                    <div class="info-note">
+                        <strong>Demo note:</strong> This project saves and tracks complaints inside the application. It does not directly submit complaints to a government department.
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>Kisan Sunaai · AI-powered farmer complaint assistance · Built for Indian Farmers 🇮🇳</footer>
+    </div>
+</div>
 
 <script>
     const API_URL = "http://127.0.0.1:8000";
@@ -192,9 +579,7 @@
     async function startRecording() {
         try {
             if (!navigator.mediaDevices?.getUserMedia) {
-                throw new Error(
-                    "Microphone is unavailable. Open this page on localhost or HTTPS."
-                );
+                throw new Error("Microphone is unavailable. Open this page on localhost or HTTPS.");
             }
 
             microphoneStream = await navigator.mediaDevices.getUserMedia({
@@ -207,17 +592,13 @@
 
             audioContext = new AudioContext();
             sourceNode = audioContext.createMediaStreamSource(microphoneStream);
-
-            processorNode = audioContext.createScriptProcessor(
-                4096, 1, 1
-            );
+            processorNode = audioContext.createScriptProcessor(4096, 1, 1);
 
             audioChunks = [];
             recordedBlob = null;
 
             processorNode.onaudioprocess = function(event) {
                 if (!isRecording) return;
-
                 const input = event.inputBuffer.getChannelData(0);
                 audioChunks.push(new Float32Array(input));
             };
@@ -230,18 +611,13 @@
             document.getElementById("startBtn").disabled = true;
             document.getElementById("stopBtn").disabled = false;
             document.getElementById("submitBtn").disabled = true;
-
-            document.getElementById("recordingStatus").textContent =
-                "🔴 Recording... Speak in Hindi.";
-
-            document.getElementById("voiceResult").textContent =
-                "Recording your complaint...";
-
+            document.getElementById("recordingStatus").textContent = "🔴 Recording... Speak in Hindi.";
+            document.getElementById("voiceResult").textContent = "Recording your complaint...";
         } catch (error) {
-            document.getElementById("recordingStatus").textContent =
-                "Microphone error: " + error.message;
+            document.getElementById("recordingStatus").textContent = "Microphone error: " + error.message;
         }
     }
+
     window.startRecording = startRecording;
 
     // STOP MICROPHONE
@@ -249,24 +625,17 @@
         if (!isRecording) return;
 
         isRecording = false;
-
         processorNode.disconnect();
         sourceNode.disconnect();
-
         microphoneStream.getTracks().forEach(track => track.stop());
 
         const sampleRate = audioContext.sampleRate;
-
         await audioContext.close();
 
         const wavBuffer = convertToWav(audioChunks, sampleRate);
-
-        recordedBlob = new Blob([wavBuffer], {
-            type: "audio/wav"
-        });
+        recordedBlob = new Blob([wavBuffer], { type: "audio/wav" });
 
         const previewUrl = URL.createObjectURL(recordedBlob);
-
         const preview = document.getElementById("audioPreview");
         preview.src = previewUrl;
         preview.hidden = false;
@@ -274,19 +643,14 @@
         document.getElementById("startBtn").disabled = false;
         document.getElementById("stopBtn").disabled = true;
         document.getElementById("submitBtn").disabled = false;
-
-        document.getElementById("recordingStatus").textContent =
-            "Recording completed. Listen to your audio before submitting.";
+        document.getElementById("recordingStatus").textContent = "Recording completed. Listen to your audio before submitting.";
 
         audioChunks = [];
     }
 
     // CONVERT BROWSER AUDIO TO 16 kHz MONO WAV
     function convertToWav(chunks, originalRate) {
-        const totalLength = chunks.reduce(
-            (sum, chunk) => sum + chunk.length, 0
-        );
-
+        const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
         const combined = new Float32Array(totalLength);
         let offset = 0;
 
@@ -298,17 +662,14 @@
         const targetRate = 16000;
         const ratio = originalRate / targetRate;
         const outputLength = Math.floor(combined.length / ratio);
-
         const samples = new Float32Array(outputLength);
 
         for (let i = 0; i < outputLength; i++) {
             const position = i * ratio;
             const index = Math.floor(position);
             const fraction = position - index;
-
             const first = combined[index] || 0;
             const second = combined[index + 1] || first;
-
             samples[i] = first + (second - first) * fraction;
         }
 
@@ -337,10 +698,7 @@
 
         for (let i = 0; i < samples.length; i++) {
             const sample = Math.max(-1, Math.min(1, samples[i]));
-            const pcm = sample < 0
-                ? sample * 32768
-                : sample * 32767;
-
+            const pcm = sample < 0 ? sample * 32768 : sample * 32767;
             view.setInt16(44 + i * 2, pcm, true);
         }
 
@@ -356,27 +714,18 @@
 
         const result = document.getElementById("voiceResult");
         const submitBtn = document.getElementById("submitBtn");
-
         const formData = new FormData();
 
-        formData.append(
-            "file",
-            recordedBlob,
-            "farmer_complaint.wav"
-        );
+        formData.append("file", recordedBlob, "farmer_complaint.wav");
 
         submitBtn.disabled = true;
-        result.textContent =
-            "Processing your complaint. Please wait...";
+        result.textContent = "Processing your complaint. Please wait...";
 
         try {
-            const response = await fetch(
-                `${API_URL}/voice-complaint`,
-                {
-                    method: "POST",
-                    body: formData
-                }
-            );
+            const response = await fetch(`${API_URL}/voice-complaint`, {
+                method: "POST",
+                body: formData
+            });
 
             const data = await response.json();
 
@@ -387,27 +736,21 @@
             const complaint = data.complaint;
 
             result.innerHTML = `
-                <h3>✅ Complaint Processed Successfully!</h3>
+                <h3>✅ Complaint processed successfully!</h3>
                 <p><b>Complaint ID:</b> ${escapeHTML(complaint.complaint_id)}</p>
                 <p><b>Complaint:</b> ${escapeHTML(complaint.complaint)}</p>
                 <p><b>Category:</b> ${escapeHTML(complaint.category)}</p>
                 <p><b>Confidence:</b> ${escapeHTML(complaint.confidence)}</p>
                 <p><b>Status:</b> ${escapeHTML(complaint.status)}</p>
                 <p><b>AI Analysis:</b></p>
-                <pre style="white-space:pre-wrap;font-family:Arial;">${escapeHTML(complaint.analysis)}</pre>
+                <pre style="white-space:pre-wrap;font-family:inherit;">${escapeHTML(complaint.analysis)}</pre>
             `;
 
-            document.getElementById("complaintId").value =
-                complaint.complaint_id;
-
+            document.getElementById("complaintId").value = complaint.complaint_id;
             loadComplaints();
-
-            document.getElementById("recordingStatus").textContent =
-                "Complaint submitted successfully!";
-
+            document.getElementById("recordingStatus").textContent = "Complaint saved successfully!";
         } catch (error) {
-            result.textContent =
-                "Error: " + error.message;
+            result.textContent = "Error: " + error.message;
         } finally {
             submitBtn.disabled = false;
         }
@@ -415,10 +758,7 @@
 
     // TRACK COMPLAINT
     async function trackComplaint() {
-        const id = document
-            .getElementById("complaintId")
-            .value.trim();
-
+        const id = document.getElementById("complaintId").value.trim();
         const result = document.getElementById("trackResult");
 
         if (!id) {
@@ -429,36 +769,29 @@
         result.textContent = "Searching...";
 
         try {
-            const response = await fetch(
-                `${API_URL}/track/${encodeURIComponent(id)}`
-            );
-
+            const response = await fetch(`${API_URL}/track/${encodeURIComponent(id)}`);
             const data = await response.json();
 
             if (!response.ok) {
-                result.textContent =
-                    data.detail || "Complaint not found.";
+                result.textContent = data.detail || "Complaint not found.";
                 return;
             }
 
             result.innerHTML = `
-                <h3>Complaint Found ✓</h3>
+                <h3>Complaint found ✓</h3>
                 <p><b>ID:</b> ${escapeHTML(data.complaint_id)}</p>
                 <p><b>Complaint:</b> ${escapeHTML(data.complaint)}</p>
                 <p><b>Category:</b> ${escapeHTML(data.category)}</p>
                 <p><b>Status:</b> ${escapeHTML(data.status)}</p>
             `;
-
         } catch (error) {
-            result.textContent =
-                "Cannot connect to backend. Check whether FastAPI is running.";
+            result.textContent = "Cannot connect to backend. Check whether FastAPI is running.";
         }
     }
 
     // LOAD SAVED COMPLAINTS
     async function loadComplaints() {
         const list = document.getElementById("complaintList");
-
         list.textContent = "Loading...";
 
         try {
@@ -482,10 +815,8 @@
                     <p><b>Status:</b> ${escapeHTML(item.status)}</p>
                 </div>
             `).join("");
-
-                } catch (error) {
-            list.textContent =
-                "Cannot connect to backend. Check whether FastAPI is running.";
+        } catch (error) {
+            list.textContent = "Cannot connect to backend. Check whether FastAPI is running.";
         }
     }
 
@@ -502,7 +833,6 @@
 
     // Load complaints when dashboard opens
     loadComplaints();
-
 </script>
 </body>
 </html>

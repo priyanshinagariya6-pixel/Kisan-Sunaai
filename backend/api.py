@@ -1,13 +1,16 @@
 
 import json
 import os
-import subprocess
-import sys
 import uuid
+import threading
 import traceback
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
+
+from pipeline_service import process_complaint
+
 
 # =====================================
 # 1. FASTAPI APPLICATION
@@ -16,12 +19,8 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(
     title="Kisan Sunaai API",
     description="AI-powered farmer complaint assistance system",
-    version="1.0"
+    version="2.0"
 )
-
-# =====================================
-# 2. CORS CONFIGURATION
-# =====================================
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,20 +30,27 @@ app.add_middleware(
 )
 
 # =====================================
-# 3. FILE PATHS
+# 2. FILE PATHS
 # =====================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATA_FILE = os.path.join(BASE_DIR, "complaints.json")
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-PIPELINE_FILE = os.path.join(BASE_DIR, "complaint_pipeline.py")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# Process one complaint at a time
+PIPELINE_LOCK = threading.Lock()
+
+
+def run_pipeline_safely(audio_path):
+    with PIPELINE_LOCK:
+        return process_complaint(audio_path)
+
 
 # =====================================
-# 4. HOME API
+# 3. HOME API
 # =====================================
 
 @app.get("/")
@@ -56,7 +62,7 @@ def home():
 
 
 # =====================================
-# 5. GET ALL COMPLAINTS
+# 4. GET ALL COMPLAINTS
 # =====================================
 
 @app.get("/complaints")
@@ -77,7 +83,7 @@ def get_complaints():
 
 
 # =====================================
-# 6. TRACK COMPLAINT
+# 5. TRACK COMPLAINT
 # =====================================
 
 @app.get("/track/{complaint_id}")
@@ -110,7 +116,7 @@ def track_complaint(complaint_id: str):
 
 
 # =====================================
-# 7. VOICE COMPLAINT API
+# 6. VOICE COMPLAINT API
 # =====================================
 
 @app.post("/voice-complaint")
@@ -118,7 +124,6 @@ async def voice_complaint(file: UploadFile = File(...)):
 
     audio_path = None
 
-    # Check filename
     if not file.filename or not file.filename.lower().endswith(".wav"):
         raise HTTPException(
             status_code=400,
@@ -126,15 +131,6 @@ async def voice_complaint(file: UploadFile = File(...)):
         )
 
     try:
-        # ---------------------------------
-        # STEP 1: SAVE UPLOADED AUDIO
-        # ---------------------------------
-
-        audio_path = os.path.join(
-            UPLOAD_DIR,
-            f"{uuid.uuid4()}.wav"
-        )
-
         audio_data = await file.read()
 
         if not audio_data:
@@ -143,109 +139,42 @@ async def voice_complaint(file: UploadFile = File(...)):
                 detail="Uploaded audio file is empty."
             )
 
+        audio_path = os.path.join(
+            UPLOAD_DIR,
+            f"{uuid.uuid4()}.wav"
+        )
+
         with open(audio_path, "wb") as audio_file:
             audio_file.write(audio_data)
 
-        # ---------------------------------
-        # STEP 2: CHECK PIPELINE FILE
-        # ---------------------------------
-
-        if not os.path.exists(PIPELINE_FILE):
-            raise HTTPException(
-                status_code=500,
-                detail="Complaint pipeline file not found."
-            )
-
-        # ---------------------------------
-        # STEP 3: RUN AI PIPELINE
-        # ---------------------------------
-
-        result = subprocess.run(
-            [
-                sys.executable,
-                PIPELINE_FILE,
-                audio_path
-            ],
-            cwd=BASE_DIR,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=600
+        # Run blocking AI work outside the async event loop
+        complaint_result = await run_in_threadpool(
+            run_pipeline_safely,
+            audio_path
         )
-
-        # ---------------------------------
-        # STEP 4: CHECK PIPELINE RESULT
-        # ---------------------------------
-
-        if result.returncode != 0:
-
-            print("PIPELINE ERROR:")
-            print(result.stderr[-4000:])
-
-            raise HTTPException(
-                status_code=500,
-                detail="AI complaint processing failed. Check backend logs."
-            )
-
-        # ---------------------------------
-        # STEP 5: READ SAVED COMPLAINTS
-        # ---------------------------------
-
-        if not os.path.exists(DATA_FILE):
-            raise HTTPException(
-                status_code=500,
-                detail="Complaint was not saved."
-            )
-
-        with open(DATA_FILE, "r", encoding="utf-8") as file:
-            complaints = json.load(file)
-
-        if not complaints:
-            raise HTTPException(
-                status_code=500,
-                detail="No complaint record found."
-            )
-
-        # ---------------------------------
-        # STEP 6: RETURN LATEST COMPLAINT
-        # ---------------------------------
-
-        latest_complaint = complaints[-1]
 
         return {
             "message": "Complaint processed successfully",
-            "complaint": latest_complaint,
-            "pipeline_output": result.stdout
+            "complaint": complaint_result
         }
-
-    except subprocess.TimeoutExpired:
-        raise HTTPException(
-            status_code=504,
-            detail="Complaint processing timed out. Please try again."
-        )
 
     except HTTPException:
         raise
 
-    except Exception as e:
-
+    except Exception as error:
         print("VOICE COMPLAINT ERROR:")
         traceback.print_exc()
 
         raise HTTPException(
             status_code=500,
-            detail=f"Internal server error: {str(e)}"
+            detail="AI complaint processing failed. Check backend logs."
         )
 
     finally:
-
-        # ---------------------------------
-        # STEP 7: DELETE TEMPORARY AUDIO
-        # ---------------------------------
-
         if audio_path and os.path.exists(audio_path):
             try:
                 os.remove(audio_path)
             except OSError:
-                print("Warning: Temporary audio file could not be deleted.")
+                print("Warning: Temporary audio could not be deleted.")
+
+        await file.close()
